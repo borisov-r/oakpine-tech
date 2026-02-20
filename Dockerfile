@@ -5,9 +5,9 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Install dependencies first (layer-cached when package files don't change)
+# To enable npm cache across builds, use BuildKit: DOCKER_BUILDKIT=1 docker build .
 COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-audit --no-fund --prefer-offline
+RUN npm ci --no-audit --no-fund
 
 # Copy source and build the static site
 COPY . .
