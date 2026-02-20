@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules/
+
+# Astro build output (rebuilt inside Docker)
+dist/
+.astro/
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Editor and OS artefacts
+.DS_Store
+*.log
+.vscode/

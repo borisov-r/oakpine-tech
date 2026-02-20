@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import Features from '../components/Features.svelte';
+import SocialLogin from '../components/SocialLogin.svelte';
+import ThrelteScene from '../components/ThrelteScene.svelte';
+---
+<BaseLayout>
+  <Navbar />
+
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Threlte 3D Background -->
+    <div class="absolute inset-0 opacity-60">
+      <ThrelteScene client:only="svelte" />
+    </div>
+
+    <!-- Gradient overlay -->
+    <div class="absolute inset-0 bg-gradient-to-b from-gray-950/50 via-transparent to-gray-950"></div>
+
+    <!-- Hero Content -->
+    <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-full px-4 py-2 mb-8">
+        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+        <span class="text-green-400 text-sm font-medium">Now in Beta</span>
+      </div>
+
+      <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight">
+        Welcome to<br />
+        <span class="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
+          OakPine Technology
+        </span>
+      </h1>
+
+      <p class="text-gray-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+        Build, grow, and scale your ideas with modern technology.
+        Empowering developers and businesses to reach new heights.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#login" class="bg-green-500 hover:bg-green-400 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:-translate-y-0.5">
+          Get Started
+        </a>
+        <a href="#features" class="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 border border-gray-700">
+          Learn More
+        </a>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <div id="features">
+    <Features client:visible />
+  </div>
+
+  <!-- Social Login Section -->
+  <SocialLogin client:visible />
+
+  <Footer />
+</BaseLayout>
