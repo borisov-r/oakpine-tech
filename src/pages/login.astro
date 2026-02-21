@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import SocialLogin from '../components/SocialLogin.svelte';
+---
+<BaseLayout title="Sign In – OakPine Technology">
+  <Navbar />
+  <main class="min-h-screen flex items-center justify-center bg-gray-950 px-4">
+    <SocialLogin client:load />
+  </main>
+</BaseLayout>
