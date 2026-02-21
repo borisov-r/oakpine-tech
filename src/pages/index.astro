@@ -3,7 +3,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import Features from '../components/Features.svelte';
-import SocialLogin from '../components/SocialLogin.svelte';
 import ThrelteScene from '../components/ThrelteScene.svelte';
 ---
 <BaseLayout>
@@ -39,7 +38,7 @@ import ThrelteScene from '../components/ThrelteScene.svelte';
       </p>
 
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="#login" class="bg-green-500 hover:bg-green-400 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:-translate-y-0.5">
+        <a href="/login" class="bg-green-500 hover:bg-green-400 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:-translate-y-0.5">
           Get Started
         </a>
         <a href="#features" class="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 border border-gray-700">
@@ -60,9 +59,6 @@ import ThrelteScene from '../components/ThrelteScene.svelte';
   <div id="features">
     <Features client:visible />
   </div>
-
-  <!-- Social Login Section -->
-  <SocialLogin client:visible />
 
   <Footer />
 </BaseLayout>
