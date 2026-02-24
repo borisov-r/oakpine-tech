@@ -13,6 +13,10 @@ RUN npm ci --no-audit --no-fund
 COPY . .
 RUN npm run build
 
+# ── Export stage (extract dist/ to the host with --output) ────────────────────
+FROM scratch AS export
+COPY --from=builder /app/dist /
+
 # ── Serve stage ─────────────────────────────────────────────────────────────────
 FROM nginx:stable-alpine AS runner
 

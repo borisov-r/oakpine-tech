@@ -111,3 +111,17 @@ docker run --rm -p 8080:8080 oakpine-tech
 docker build --build-arg PORT=3000 -t oakpine-tech .
 docker run --rm -p 3000:3000 oakpine-tech
 ```
+
+## Docker – export dist/ for production deployment
+
+To produce a local `dist/` folder (identical to `npm run build`) without
+installing Node.js on the host, use the dedicated `export` stage together with
+Docker BuildKit's `--output` flag:
+
+```bash
+docker build --target export --output type=local,dest=./dist .
+```
+
+This writes the compiled static files into `./dist/` on your machine.  
+You can then copy that directory to any web server (nginx, Apache, Caddy, etc.)
+or deploy it to a static hosting service.
