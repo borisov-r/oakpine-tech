@@ -62,6 +62,39 @@ Wiring them up end-to-end requires the following steps:
    platform secrets, etc.) so the production server can reach the database and
    OAuth providers.
 
+## Production deployment
+
+### Node.js version
+
+Astro 5 requires **Node.js ≥ 18.17.1**.  
+From the available versions, the minimum supported release is **18.20.8**.  
+Recommended: use the latest LTS release (**20.20.0** or newer).
+
+### Deploy without Docker
+
+1. Install dependencies and build the static site:
+   ```bash
+   npm install
+   npm run build        # outputs to dist/
+   ```
+
+2. Serve the `dist/` directory with any static-file server. Using the
+   built-in Astro preview server (for smoke-testing only – not recommended for
+   high-traffic production):
+   ```bash
+   npm run preview      # http://localhost:4321
+   ```
+   For a real production server, copy the `dist/` folder to your web server
+   (nginx, Apache, Caddy, etc.) and serve it as a static site, or use a
+   dedicated static-file server such as [serve](https://github.com/vercel/serve):
+   ```bash
+   npx serve dist       # http://localhost:3000
+   ```
+
+3. Pass the required environment variables to the process (see
+   [Environment variables](#environment-variables) above), either via a `.env`
+   file or your hosting platform's secrets/config mechanism.
+
 ## Docker – build & run locally
 
 The `Dockerfile` compiles the site and serves it with nginx.  
