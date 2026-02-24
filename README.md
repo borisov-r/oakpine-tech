@@ -119,7 +119,7 @@ installing Node.js on the host, use the dedicated `export` stage together with
 Docker BuildKit's `--output` flag:
 
 ```bash
-docker build --target export --output type=local,dest=./dist .
+docker buildx build --target export --output type=local,dest=./dist .
 ```
 
 This writes the compiled static files into `./dist/` on your machine.  
