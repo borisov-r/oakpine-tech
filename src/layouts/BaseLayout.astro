@@ -3,7 +3,7 @@ interface Props {
   title?: string;
   description?: string;
 }
-const { title = "OakPine Technology", description = "Build, grow, and scale your ideas with modern technology." } = Astro.props;
+const { title = "OakPine Technologies", description = "Build, grow, and scale your ideas with modern technology." } = Astro.props;
 ---
 <!doctype html>
 <html lang="en" class="scroll-smooth">
@@ -11,10 +11,13 @@ const { title = "OakPine Technology", description = "Build, grow, and scale your
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
-  <body class="bg-gray-950 text-white antialiased">
+  <body class="bg-gray-900 text-white antialiased">
     <slot />
   </body>
 </html>

@@ -1,5 +1,9 @@
-# oakpine-tech
+# OakPine Technologies
 Official website of oakpine.tech domain
+
+## Website Preview
+
+![OakPine Technologies Website](docs/screenshot.png)
 
 ## Local development
 
