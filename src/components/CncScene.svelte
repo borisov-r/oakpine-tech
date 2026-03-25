@@ -8,12 +8,16 @@
   const SCENE_SCALE = 1 / 25;
   const IN_PER_MM = 1 / 25.4;
 
+  // Available step sizes in mm
+  const STEP_OPTIONS = [0.1, 1.0, 2.5, 5, 10] as const;
+
   // Internal state stored in mm
   let dimX = $state(100); // 100 mm ≈ 4 in
   let dimY = $state(12);  //  12 mm ≈ 0.5 in
   let dimZ = $state(150); // 150 mm ≈ 6 in
 
   let unit = $state<Unit>('mm');
+  let step = $state<number>(0.1); // mm
 
   // Scaled Three.js dimensions
   let s3X = $derived(dimX * SCENE_SCALE);
@@ -25,55 +29,58 @@
     return unit === 'in' ? (mm * IN_PER_MM).toFixed(3) : mm.toFixed(1);
   }
 
-  // Step size for arrow buttons: 10 mm or ~0.5 in (12.7 mm)
-  function stepMm(): number {
-    return unit === 'in' ? 12.7 : 10;
-  }
-
   function clamp(v: number, lo: number, hi: number): number {
     return Math.max(lo, Math.min(hi, v));
   }
 
-  function adjustX(dir: 1 | -1) { dimX = clamp(dimX + stepMm() * dir, 10, 500); }
-  function adjustY(dir: 1 | -1) { dimY = clamp(dimY + stepMm() * dir, 1, 200); }
-  function adjustZ(dir: 1 | -1) { dimZ = clamp(dimZ + stepMm() * dir, 10, 500); }
-
-  // Slider/number-input helpers: display in the selected unit, convert back to mm on input
-  function toDisp(mm: number): number { return unit === 'in' ? +(mm * IN_PER_MM).toFixed(4) : mm; }
-  function fromDisp(val: string): number { return unit === 'in' ? +val * 25.4 : +val; }
-
-  // Per-axis slider limits in the currently selected unit
-  let limX = $derived(unit === 'in'
-    ? { min: +(10 * IN_PER_MM).toFixed(3), max: +(500 * IN_PER_MM).toFixed(3), step: +(10 * IN_PER_MM).toFixed(3) }
-    : { min: 10, max: 500, step: 10 });
-  let limY = $derived(unit === 'in'
-    ? { min: +(1 * IN_PER_MM).toFixed(3), max: +(200 * IN_PER_MM).toFixed(3), step: +(1 * IN_PER_MM).toFixed(3) }
-    : { min: 1, max: 200, step: 1 });
-  let limZ = $derived(unit === 'in'
-    ? { min: +(10 * IN_PER_MM).toFixed(3), max: +(500 * IN_PER_MM).toFixed(3), step: +(10 * IN_PER_MM).toFixed(3) }
-    : { min: 10, max: 500, step: 10 });
+  function adjustX(dir: 1 | -1) { dimX = clamp(dimX + step * dir, 10, 500); }
+  function adjustY(dir: 1 | -1) { dimY = clamp(dimY + step * dir, 1, 200); }
+  function adjustZ(dir: 1 | -1) { dimZ = clamp(dimZ + step * dir, 10, 500); }
 </script>
 
 <div class="flex flex-col gap-6 w-full">
-  <!-- Unit toggle -->
-  <div class="flex items-center gap-3">
-    <span class="text-sm font-medium text-gray-400">Units:</span>
-    <div class="flex rounded-lg overflow-hidden border border-gray-600">
-      <button
-        onclick={() => (unit = 'mm')}
-        class="px-4 py-1.5 text-sm font-semibold transition-colors {unit === 'mm' ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
-      >mm</button>
-      <button
-        onclick={() => (unit = 'in')}
-        class="px-4 py-1.5 text-sm font-semibold transition-colors {unit === 'in' ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
-      >in</button>
+  <!-- Controls row: unit toggle + step selector -->
+  <div class="flex flex-wrap items-center gap-6">
+    <!-- Unit toggle -->
+    <div class="flex items-center gap-3">
+      <span class="text-sm font-medium text-gray-400">Units:</span>
+      <div class="flex rounded-lg overflow-hidden border border-gray-600">
+        <button
+          onclick={() => (unit = 'mm')}
+          class="px-4 py-1.5 text-sm font-semibold transition-colors {unit === 'mm' ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
+        >mm</button>
+        <button
+          onclick={() => (unit = 'in')}
+          class="px-4 py-1.5 text-sm font-semibold transition-colors {unit === 'in' ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
+        >in</button>
+      </div>
+    </div>
+
+    <!-- Step selector -->
+    <div class="flex items-center gap-3">
+      <span class="text-sm font-medium text-gray-400">Step (mm):</span>
+      <div class="flex rounded-lg overflow-hidden border border-gray-600">
+        {#each STEP_OPTIONS as s}
+          <button
+            onclick={() => (step = s)}
+            class="px-3 py-1.5 text-sm font-semibold transition-colors {step === s ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
+          >{s}</button>
+        {/each}
+      </div>
     </div>
   </div>
 
   <!-- 3D Canvas with overlays -->
   <div class="relative w-full rounded-xl overflow-hidden border border-gray-700" style="height: 480px;">
     <Canvas>
-      <CncSceneContent dimX={s3X} dimY={s3Y} dimZ={s3Z} />
+      <CncSceneContent
+        dimX={s3X}
+        dimY={s3Y}
+        dimZ={s3Z}
+        onAdjustX={adjustX}
+        onAdjustY={adjustY}
+        onAdjustZ={adjustZ}
+      />
     </Canvas>
 
     <!-- Arrow controls — bottom-left overlay -->
@@ -142,87 +149,6 @@
           <span class="text-green-400">{fmt(dimZ)} {unit}</span>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Dimension Controls -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-gray-800 rounded-xl p-6 border border-gray-700">
-    <!-- X dimension -->
-    <div class="flex flex-col gap-3">
-      <div class="flex items-center justify-between">
-        <label class="text-sm font-semibold text-gray-200">Width (X)</label>
-        <span class="text-sm font-mono text-green-400">{fmt(dimX)} {unit}</span>
-      </div>
-      <input
-        type="range"
-        min={limX.min}
-        max={limX.max}
-        step={limX.step}
-        value={toDisp(dimX)}
-        oninput={e => { dimX = clamp(fromDisp(e.currentTarget.value), 10, 500); }}
-        class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700 accent-green-500"
-      />
-      <input
-        type="number"
-        min={limX.min}
-        max={limX.max}
-        step={limX.step}
-        value={toDisp(dimX)}
-        oninput={e => { dimX = clamp(fromDisp(e.currentTarget.value), 10, 500); }}
-        class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
-      />
-    </div>
-
-    <!-- Y dimension -->
-    <div class="flex flex-col gap-3">
-      <div class="flex items-center justify-between">
-        <label class="text-sm font-semibold text-gray-200">Height (Y)</label>
-        <span class="text-sm font-mono text-green-400">{fmt(dimY)} {unit}</span>
-      </div>
-      <input
-        type="range"
-        min={limY.min}
-        max={limY.max}
-        step={limY.step}
-        value={toDisp(dimY)}
-        oninput={e => { dimY = clamp(fromDisp(e.currentTarget.value), 1, 200); }}
-        class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700 accent-green-500"
-      />
-      <input
-        type="number"
-        min={limY.min}
-        max={limY.max}
-        step={limY.step}
-        value={toDisp(dimY)}
-        oninput={e => { dimY = clamp(fromDisp(e.currentTarget.value), 1, 200); }}
-        class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
-      />
-    </div>
-
-    <!-- Z dimension -->
-    <div class="flex flex-col gap-3">
-      <div class="flex items-center justify-between">
-        <label class="text-sm font-semibold text-gray-200">Depth (Z)</label>
-        <span class="text-sm font-mono text-green-400">{fmt(dimZ)} {unit}</span>
-      </div>
-      <input
-        type="range"
-        min={limZ.min}
-        max={limZ.max}
-        step={limZ.step}
-        value={toDisp(dimZ)}
-        oninput={e => { dimZ = clamp(fromDisp(e.currentTarget.value), 10, 500); }}
-        class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700 accent-green-500"
-      />
-      <input
-        type="number"
-        min={limZ.min}
-        max={limZ.max}
-        step={limZ.step}
-        value={toDisp(dimZ)}
-        oninput={e => { dimZ = clamp(fromDisp(e.currentTarget.value), 10, 500); }}
-        class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
-      />
     </div>
   </div>
 </div>
