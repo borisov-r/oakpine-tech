@@ -5,9 +5,20 @@ import Footer from '../components/Footer.astro';
 import CncScene from '../components/CncScene.svelte';
 ---
 <BaseLayout title="CNC – OakPine Technology" description="CNC machine workspace with 3D rectangle preview and dimension controls.">
+  <script>
+    // Client-side auth guard for the static-site demo.
+    // The Dashboard sets 'oakpine_session' on mount; redirect to login if absent.
+    // A real deployment should use server-side session validation instead.
+    if (!localStorage.getItem('oakpine_session')) {
+      window.location.replace('/login');
+    }
+  </script>
   <Navbar />
   <main class="min-h-screen bg-gray-900 pt-24 pb-16">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-4 flex items-center gap-2">
+        <a href="/dashboard" class="text-sm text-gray-400 hover:text-green-400 transition-colors">← Dashboard</a>
+      </div>
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-white mb-2">CNC Workspace</h1>
         <p class="text-gray-400 text-sm">Adjust the X, Y, and Z dimensions of the rectangle using the controls below. Drag the scene to orbit the camera.</p>
