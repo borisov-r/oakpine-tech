@@ -16,6 +16,7 @@
   interactivity();
 
   let selected = $state(false);
+  let orbitEnabled = $state(true);
 
   const GRID_SIZE = 20;
   const GRID_DIVISIONS = 20;
@@ -28,10 +29,95 @@
   const HEAD_RADIUS = 0.12;
   const HEAD_HEIGHT = 0.2;
   const ARROW_COLOR = '#facc15';
+
+  // Pixels of pointer movement required to trigger one step adjustment
+  const DRAG_THRESHOLD_PX = 20;
+
+  // Drag state (plain variables – no reactivity needed)
+  let isDragging = false;
+  let dragAdjust: ((dir: 1 | -1) => void) | undefined;
+  let dragScreenAxis: 'x' | 'y' = 'x';
+  let dragLastPos = 0;
+  let dragPending = 0;
+  // Tracks whether at least one step was applied during the current drag so we
+  // can suppress the subsequent onclick (which would double-count).
+  let hadSignificantDrag = false;
+
+  function startArrowDrag(
+    adjust: ((dir: 1 | -1) => void) | undefined,
+    screenAxis: 'x' | 'y',
+    e: { stopPropagation: () => void; event?: PointerEvent },
+  ) {
+    e.stopPropagation();
+    if (!adjust) return;
+
+    isDragging = true;
+    dragAdjust = adjust;
+    dragScreenAxis = screenAxis;
+    hadSignificantDrag = false;
+    dragPending = 0;
+
+    // Threlte wraps the native event under `e.event`
+    dragLastPos = screenAxis === 'x' ? (e.event?.clientX ?? 0) : (e.event?.clientY ?? 0);
+
+    orbitEnabled = false;
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp, { once: true });
+  }
+
+  function onPointerMove(e: PointerEvent) {
+    if (!isDragging) return;
+
+    const pos = dragScreenAxis === 'x' ? e.clientX : e.clientY;
+    const rawDelta = pos - dragLastPos;
+    dragLastPos = pos;
+
+    // Screen Y increases downward; invert so dragging up increases the value.
+    const delta = dragScreenAxis === 'y' ? -rawDelta : rawDelta;
+    dragPending += delta;
+
+    while (dragPending >= DRAG_THRESHOLD_PX) {
+      dragAdjust?.(1);
+      dragPending -= DRAG_THRESHOLD_PX;
+      hadSignificantDrag = true;
+    }
+    while (dragPending <= -DRAG_THRESHOLD_PX) {
+      dragAdjust?.(-1);
+      dragPending += DRAG_THRESHOLD_PX;
+      hadSignificantDrag = true;
+    }
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+    dragAdjust = undefined;
+    orbitEnabled = true;
+    document.removeEventListener('pointermove', onPointerMove);
+    // 'pointerup' was added with { once: true } so no explicit removal is needed.
+  }
+
+  // Suppress the click that fires after a drag so the dimension isn't
+  // adjusted twice. The flag is cleared after the first suppressed click.
+  function handleArrowClick(
+    e: { stopPropagation: () => void },
+    adjust: ((dir: 1 | -1) => void) | undefined,
+    dir: 1 | -1,
+  ) {
+    if (hadSignificantDrag) { hadSignificantDrag = false; return; }
+    e.stopPropagation();
+    adjust?.(dir);
+  }
+
+  // Clean up if the component is destroyed while a drag is in progress.
+  $effect(() => {
+    return () => {
+      document.removeEventListener('pointermove', onPointerMove);
+    };
+  });
 </script>
 
 <T.PerspectiveCamera makeDefault position={[8, 6, 8]} fov={45}>
-  <OrbitControls enableDamping dampingFactor={0.05} />
+  <OrbitControls enableDamping dampingFactor={0.05} enabled={orbitEnabled} />
 </T.PerspectiveCamera>
 
 <T.AmbientLight intensity={0.5} />
@@ -63,7 +149,8 @@
   <T.Mesh
     position={[dimX / 2 + SHAFT_HEIGHT / 2, dimY / 2, 0]}
     rotation={[0, 0, -Math.PI / 2]}
-    onclick={(e) => { e.stopPropagation(); onAdjustX?.(1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustX, 1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustX, 'x', e)}
   >
     <T.CylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, SHAFT_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -71,7 +158,8 @@
   <T.Mesh
     position={[dimX / 2 + SHAFT_HEIGHT + HEAD_HEIGHT / 2, dimY / 2, 0]}
     rotation={[0, 0, -Math.PI / 2]}
-    onclick={(e) => { e.stopPropagation(); onAdjustX?.(1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustX, 1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustX, 'x', e)}
   >
     <T.ConeGeometry args={[HEAD_RADIUS, HEAD_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -81,7 +169,8 @@
   <T.Mesh
     position={[-dimX / 2 - SHAFT_HEIGHT / 2, dimY / 2, 0]}
     rotation={[0, 0, Math.PI / 2]}
-    onclick={(e) => { e.stopPropagation(); onAdjustX?.(-1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustX, -1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustX, 'x', e)}
   >
     <T.CylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, SHAFT_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -89,7 +178,8 @@
   <T.Mesh
     position={[-dimX / 2 - SHAFT_HEIGHT - HEAD_HEIGHT / 2, dimY / 2, 0]}
     rotation={[0, 0, Math.PI / 2]}
-    onclick={(e) => { e.stopPropagation(); onAdjustX?.(-1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustX, -1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustX, 'x', e)}
   >
     <T.ConeGeometry args={[HEAD_RADIUS, HEAD_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -98,14 +188,16 @@
   <!-- +Y arrow (increase height) -->
   <T.Mesh
     position={[0, dimY + SHAFT_HEIGHT / 2, 0]}
-    onclick={(e) => { e.stopPropagation(); onAdjustY?.(1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustY, 1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustY, 'y', e)}
   >
     <T.CylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, SHAFT_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
   </T.Mesh>
   <T.Mesh
     position={[0, dimY + SHAFT_HEIGHT + HEAD_HEIGHT / 2, 0]}
-    onclick={(e) => { e.stopPropagation(); onAdjustY?.(1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustY, 1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustY, 'y', e)}
   >
     <T.ConeGeometry args={[HEAD_RADIUS, HEAD_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -115,7 +207,8 @@
   <T.Mesh
     position={[0, -SHAFT_HEIGHT / 2, 0]}
     rotation={[0, 0, Math.PI]}
-    onclick={(e) => { e.stopPropagation(); onAdjustY?.(-1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustY, -1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustY, 'y', e)}
   >
     <T.CylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, SHAFT_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -123,7 +216,8 @@
   <T.Mesh
     position={[0, -SHAFT_HEIGHT - HEAD_HEIGHT / 2, 0]}
     rotation={[0, 0, Math.PI]}
-    onclick={(e) => { e.stopPropagation(); onAdjustY?.(-1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustY, -1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustY, 'y', e)}
   >
     <T.ConeGeometry args={[HEAD_RADIUS, HEAD_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -133,7 +227,8 @@
   <T.Mesh
     position={[0, dimY / 2, dimZ / 2 + SHAFT_HEIGHT / 2]}
     rotation={[Math.PI / 2, 0, 0]}
-    onclick={(e) => { e.stopPropagation(); onAdjustZ?.(1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustZ, 1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustZ, 'x', e)}
   >
     <T.CylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, SHAFT_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -141,7 +236,8 @@
   <T.Mesh
     position={[0, dimY / 2, dimZ / 2 + SHAFT_HEIGHT + HEAD_HEIGHT / 2]}
     rotation={[Math.PI / 2, 0, 0]}
-    onclick={(e) => { e.stopPropagation(); onAdjustZ?.(1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustZ, 1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustZ, 'x', e)}
   >
     <T.ConeGeometry args={[HEAD_RADIUS, HEAD_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -151,7 +247,8 @@
   <T.Mesh
     position={[0, dimY / 2, -dimZ / 2 - SHAFT_HEIGHT / 2]}
     rotation={[-Math.PI / 2, 0, 0]}
-    onclick={(e) => { e.stopPropagation(); onAdjustZ?.(-1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustZ, -1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustZ, 'x', e)}
   >
     <T.CylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, SHAFT_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
@@ -159,7 +256,8 @@
   <T.Mesh
     position={[0, dimY / 2, -dimZ / 2 - SHAFT_HEIGHT - HEAD_HEIGHT / 2]}
     rotation={[-Math.PI / 2, 0, 0]}
-    onclick={(e) => { e.stopPropagation(); onAdjustZ?.(-1); }}
+    onclick={(e) => handleArrowClick(e, onAdjustZ, -1)}
+    onpointerdown={(e) => startArrowDrag(onAdjustZ, 'x', e)}
   >
     <T.ConeGeometry args={[HEAD_RADIUS, HEAD_HEIGHT, 8]} />
     <T.MeshStandardMaterial color={ARROW_COLOR} />
