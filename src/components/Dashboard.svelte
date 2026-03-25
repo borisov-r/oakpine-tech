@@ -56,7 +56,7 @@
 
   const quickActions = [
     { label: 'New Project', icon: '➕', href: '#', color: 'bg-green-500 hover:bg-green-400' },
-    { label: 'Invite Member', icon: '📧', href: '#', color: 'bg-gray-700 hover:bg-gray-600' },
+    { label: 'CNC Workspace', icon: '🔧', href: '/cnc', color: 'bg-emerald-700 hover:bg-emerald-600' },
     { label: 'View Reports', icon: '📊', href: '#', color: 'bg-gray-700 hover:bg-gray-600' },
     { label: 'Settings', icon: '⚙️', href: '#', color: 'bg-gray-700 hover:bg-gray-600' },
   ];
@@ -67,10 +67,16 @@
     { label: 'Tasks', icon: '✅', href: '#', active: false },
     { label: 'Team', icon: '👥', href: '#', active: false },
     { label: 'Analytics', icon: '📊', href: '#', active: false },
+    { label: 'CNC Workspace', icon: '🔧', href: '/cnc', active: false },
     { label: 'Settings', icon: '⚙️', href: '#', active: false },
   ];
 
   onMount(() => {
+    // Set a client-side session flag so authenticated pages (e.g. /cnc) can
+    // verify the user reached the dashboard. This is intentionally lightweight
+    // for a static-site demo; a real deployment should use server-side sessions.
+    localStorage.setItem('oakpine_session', 'authenticated');
+
     const updateGreeting = () => {
       const hour = new Date().getHours();
       if (hour < 12) greeting = 'Good morning';
