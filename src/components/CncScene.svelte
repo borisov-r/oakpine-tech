@@ -295,12 +295,12 @@
           <span class="w-20 text-xs text-gray-300">Width (X)</span>
           <button
             onclick={() => adjustX(-1)}
-            class="w-7 h-7 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 text-white transition-colors"
+            class="w-10 h-10 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 active:bg-green-500 text-white text-lg transition-colors [touch-action:manipulation]"
             aria-label="Decrease width"
           >←</button>
           <button
             onclick={() => adjustX(1)}
-            class="w-7 h-7 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 text-white transition-colors"
+            class="w-10 h-10 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 active:bg-green-500 text-white text-lg transition-colors [touch-action:manipulation]"
             aria-label="Increase width"
           >→</button>
         </div>
@@ -309,12 +309,12 @@
           <span class="w-20 text-xs text-gray-300">Height (Y)</span>
           <button
             onclick={() => adjustY(-1)}
-            class="w-7 h-7 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 text-white transition-colors"
+            class="w-10 h-10 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 active:bg-green-500 text-white text-lg transition-colors [touch-action:manipulation]"
             aria-label="Decrease height"
           >↓</button>
           <button
             onclick={() => adjustY(1)}
-            class="w-7 h-7 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 text-white transition-colors"
+            class="w-10 h-10 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 active:bg-green-500 text-white text-lg transition-colors [touch-action:manipulation]"
             aria-label="Increase height"
           >↑</button>
         </div>
@@ -323,12 +323,12 @@
           <span class="w-20 text-xs text-gray-300">Length (Z)</span>
           <button
             onclick={() => adjustZ(-1)}
-            class="w-7 h-7 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 text-white transition-colors"
+            class="w-10 h-10 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 active:bg-green-500 text-white text-lg transition-colors [touch-action:manipulation]"
             aria-label="Decrease length"
           >←</button>
           <button
             onclick={() => adjustZ(1)}
-            class="w-7 h-7 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 text-white transition-colors"
+            class="w-10 h-10 flex items-center justify-center rounded bg-gray-700 hover:bg-green-600 active:bg-green-500 text-white text-lg transition-colors [touch-action:manipulation]"
             aria-label="Increase length"
           >→</button>
         </div>
