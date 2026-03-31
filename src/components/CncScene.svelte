@@ -18,8 +18,13 @@
   const SCENE_SCALE = 1 / 25;
   const IN_PER_MM = 1 / 25.4;
 
-  // Available step sizes in mm
-  const STEP_OPTIONS = [0.1, 1.0, 2.5, 5, 10] as const;
+  // Available step sizes in mm (for mm mode)
+  const STEP_OPTIONS_MM = [0.1, 1.0, 2.5, 5, 10] as const;
+  // Available step sizes for inch mode, stored in mm (0.004, 0.04, 0.1, 0.5, 1.0 inches)
+  const STEP_OPTIONS_IN_MM = [0.004, 0.04, 0.1, 0.5, 1.0].map((x) => x * 25.4) as unknown as readonly number[];
+  // Default steps when switching units: 1.0 mm and 0.1 in (2.54 mm)
+  const DEFAULT_STEP_MM = 1.0;
+  const DEFAULT_STEP_IN_MM = 0.1 * 25.4;
 
   // Dimension limits in mm (width × length × height)
   const MIN_W = 100,  MAX_W = 950;
@@ -198,11 +203,11 @@
       <span class="text-sm font-medium text-gray-400">Units:</span>
       <div class="flex rounded-lg overflow-hidden border border-gray-600">
         <button
-          onclick={() => (unit = 'mm')}
+          onclick={() => { unit = 'mm'; step = DEFAULT_STEP_MM; }}
           class="px-4 py-1.5 text-sm font-semibold transition-colors {unit === 'mm' ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
         >mm</button>
         <button
-          onclick={() => (unit = 'in')}
+          onclick={() => { unit = 'in'; step = DEFAULT_STEP_IN_MM; }}
           class="px-4 py-1.5 text-sm font-semibold transition-colors {unit === 'in' ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
         >in</button>
       </div>
@@ -212,7 +217,7 @@
     <div class="flex items-center gap-3">
       <span class="text-sm font-medium text-gray-400">Step ({unit}):</span>
       <div class="flex rounded-lg overflow-hidden border border-gray-600">
-        {#each STEP_OPTIONS as s}
+        {#each (unit === 'mm' ? STEP_OPTIONS_MM : STEP_OPTIONS_IN_MM) as s}
           <button
             onclick={() => (step = s)}
             class="px-3 py-1.5 text-sm font-semibold transition-colors {step === s ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
@@ -231,7 +236,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
         </svg>
-        Download STL
+        Download
       </button>
       <button
         onclick={manufacture}
