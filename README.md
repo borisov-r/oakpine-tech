@@ -30,6 +30,9 @@ cp .env.example .env
 | `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` | LinkedIn OAuth app credentials |
 | `TWITTER_CLIENT_ID` / `TWITTER_CLIENT_SECRET` | Twitter / X OAuth 2.0 app credentials |
 | `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY_PATH` | Sign in with Apple credentials |
+| `NEXTCLOUD_WEBDAV_SERVER` | Base URL of your Nextcloud instance (e.g. `https://cloud.example.com`) |
+| `CNC_APP_USER` / `CNC_APP_PASSWORD` | Nextcloud account used by the CNC app to upload manufactured part files |
+| `PCB_APP_USER` / `PCB_APP_PASSWORD` | Nextcloud account used by the PCB app to upload board design files |
 
 The `.env` file is listed in `.gitignore` and will never be committed to the repository.
 
