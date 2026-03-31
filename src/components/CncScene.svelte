@@ -210,13 +210,13 @@
 
     <!-- Step selector -->
     <div class="flex items-center gap-3">
-      <span class="text-sm font-medium text-gray-400">Step (mm):</span>
+      <span class="text-sm font-medium text-gray-400">Step ({unit}):</span>
       <div class="flex rounded-lg overflow-hidden border border-gray-600">
         {#each STEP_OPTIONS as s}
           <button
             onclick={() => (step = s)}
             class="px-3 py-1.5 text-sm font-semibold transition-colors {step === s ? 'bg-green-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}"
-          >{s}</button>
+          >{fmt(s)}</button>
         {/each}
       </div>
     </div>
@@ -260,11 +260,11 @@
   <!-- Manufacturing limits info -->
   <div class="flex flex-wrap gap-4 text-xs font-mono text-gray-500">
     <span>
-      Min: {MIN_W} × {MIN_L} × {MIN_H} mm &nbsp;(W × L × H)
+      Min: {fmt(MIN_W)} × {fmt(MIN_L)} × {fmt(MIN_H)} {unit} &nbsp;(W × L × H)
     </span>
     <span>|</span>
     <span>
-      Max: {MAX_W} × {MAX_L} × {MAX_H} mm &nbsp;(W × L × H)
+      Max: {fmt(MAX_W)} × {fmt(MAX_L)} × {fmt(MAX_H)} {unit} &nbsp;(W × L × H)
     </span>
   </div>
 
