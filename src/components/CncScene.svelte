@@ -4,13 +4,12 @@
   import * as THREE from 'three';
   import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 
-  interface Props {
-    nextcloudServer?: string;
-    cncUser?: string;
-    cncPassword?: string;
-  }
-
-  let { nextcloudServer = '', cncUser = '', cncPassword = '' }: Props = $props();
+  // Read runtime configuration injected by env-config.js (loaded before this
+  // script via the <script src="/env-config.js"> tag in BaseLayout.astro).
+  const _env = window._env ?? {};
+  const nextcloudServer: string = _env.NEXTCLOUD_WEBDAV_SERVER ?? '';
+  const cncUser: string = _env.CNC_APP_USER ?? '';
+  const cncPassword: string = _env.CNC_APP_PASSWORD ?? '';
 
   type Unit = 'mm' | 'in';
 

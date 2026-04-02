@@ -43,6 +43,10 @@ RUN printf 'server {\n\
 # Copy the compiled site from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Copy and enable the entrypoint that writes env-config.js at container startup
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 EXPOSE ${PORT}
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
