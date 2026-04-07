@@ -4,14 +4,10 @@
   import * as THREE from 'three';
   import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 
-  // Read runtime configuration injected by env-config.js (loaded before this
-  // script via the <script src="/env-config.js"> tag in BaseLayout.astro).
-  const _env = window._env ?? {};
-  const nextcloudServer: string = _env.NEXTCLOUD_WEBDAV_SERVER ?? '';
-  const cncUser: string = _env.CNC_APP_USER ?? '';
-  const cncPassword: string = _env.CNC_APP_PASSWORD ?? '';
-
   type Unit = 'mm' | 'in';
+
+  // Base path of the nginx WebDAV reverse proxy (must match docker-entrypoint.sh)
+  const WEBDAV_PROXY_BASE = '/api/webdav';
 
   // Scale factor: mm → Three.js scene units (25 mm per unit keeps the original visual scale)
   const SCENE_SCALE = 1 / 25;
@@ -102,11 +98,11 @@
   }
 
   // ── Nextcloud WebDAV helpers ─────────────────────────────────────────────────────
-  async function webdavMkdir(url: string, auth: string): Promise<void> {
+  async function webdavMkdir(url: string): Promise<void> {
     console.debug('[CNC] MKCOL', url);
     let res: Response;
     try {
-      res = await fetch(url, { method: 'MKCOL', headers: { Authorization: auth } });
+      res = await fetch(url, { method: 'MKCOL' });
     } catch (fetchErr) {
       console.error('[CNC] MKCOL fetch failed (network error):', url, fetchErr);
       throw fetchErr;
@@ -118,13 +114,13 @@
     }
   }
 
-  async function webdavPut(url: string, body: BodyInit, auth: string, contentType: string): Promise<void> {
+  async function webdavPut(url: string, body: BodyInit, contentType: string): Promise<void> {
     console.debug('[CNC] PUT', url, 'Content-Type:', contentType);
     let res: Response;
     try {
       res = await fetch(url, {
         method: 'PUT',
-        headers: { Authorization: auth, 'Content-Type': contentType },
+        headers: { 'Content-Type': contentType },
         body,
       });
     } catch (fetchErr) {
@@ -137,19 +133,9 @@
     }
   }
 
-  // ── Manufacture (upload to Nextcloud) ───────────────────────────────────────────
+  // ── Manufacture (upload to Nextcloud via server-side WebDAV proxy) ──────────────
   async function manufacture() {
     console.debug('[CNC] manufacture() called');
-    console.debug('[CNC] nextcloudServer:', nextcloudServer || '(empty)');
-    console.debug('[CNC] cncUser:', cncUser || '(empty)');
-    console.debug('[CNC] cncPassword configured:', cncPassword ? 'yes' : 'no');
-
-    if (!nextcloudServer || !cncUser || !cncPassword) {
-      uploadStatus = 'error';
-      uploadMessage = 'Nextcloud credentials are not configured (NEXTCLOUD_WEBDAV_SERVER, CNC_APP_USER, CNC_APP_PASSWORD).';
-      console.warn('[CNC] Aborting: missing credentials');
-      return;
-    }
 
     uploadStatus = 'uploading';
     uploadMessage = 'Uploading to Nextcloud…';
@@ -162,24 +148,22 @@
         localStorage.setItem('oakpine_user_id', userId);
       }
       const projectId = 'Project_' + crypto.randomUUID();
-      const auth = 'Basic ' + btoa(`${cncUser}:${cncPassword}`);
 
-      // Nextcloud WebDAV path: <server>/remote.php/dav/files/<user>
-      const davBase = nextcloudServer.replace(/\/$/, '') + '/remote.php/dav/files/' + cncUser;
-      console.debug('[CNC] davBase:', davBase);
-
+      // WebDAV requests are routed through the nginx proxy at /api/webdav/
+      // which forwards them to Nextcloud with server-side credentials.
+      const davBase    = WEBDAV_PROXY_BASE;
       const cncPath     = `${davBase}/CNC-Projects`;
       const userPath    = `${cncPath}/${userId}`;
       const projectPath = `${userPath}/${projectId}`;
 
       // Create directory hierarchy
-      await webdavMkdir(cncPath, auth);
-      await webdavMkdir(userPath, auth);
-      await webdavMkdir(projectPath, auth);
+      await webdavMkdir(cncPath);
+      await webdavMkdir(userPath);
+      await webdavMkdir(projectPath);
 
       // Upload model.stl
       const stlData = buildSTL();
-      await webdavPut(`${projectPath}/model.stl`, stlData.buffer, auth, 'application/octet-stream');
+      await webdavPut(`${projectPath}/model.stl`, stlData.buffer, 'application/octet-stream');
 
       // Upload metadata.json
       const metadata = {
@@ -198,14 +182,13 @@
       await webdavPut(
         `${projectPath}/metadata.json`,
         JSON.stringify(metadata, null, 2),
-        auth,
         'application/json',
       );
 
       // Upload preview.png (canvas screenshot)
       const previewBlob = await capturePreview();
       if (previewBlob) {
-        await webdavPut(`${projectPath}/preview.png`, previewBlob, auth, 'image/png');
+        await webdavPut(`${projectPath}/preview.png`, previewBlob, 'image/png');
       }
 
       uploadStatus = 'success';
