@@ -103,7 +103,15 @@
 
   // ── Nextcloud WebDAV helpers ─────────────────────────────────────────────────────
   async function webdavMkdir(url: string, auth: string): Promise<void> {
-    const res = await fetch(url, { method: 'MKCOL', headers: { Authorization: auth } });
+    console.debug('[CNC] MKCOL', url);
+    let res: Response;
+    try {
+      res = await fetch(url, { method: 'MKCOL', headers: { Authorization: auth } });
+    } catch (fetchErr) {
+      console.error('[CNC] MKCOL fetch failed (network error):', url, fetchErr);
+      throw fetchErr;
+    }
+    console.debug('[CNC] MKCOL response', url, res.status, res.statusText);
     // 201 = created, 405 = already exists – both are acceptable
     if (!res.ok && res.status !== 405) {
       throw new Error(`MKCOL ${url} → ${res.status} ${res.statusText}`);
@@ -111,11 +119,19 @@
   }
 
   async function webdavPut(url: string, body: BodyInit, auth: string, contentType: string): Promise<void> {
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: { Authorization: auth, 'Content-Type': contentType },
-      body,
-    });
+    console.debug('[CNC] PUT', url, 'Content-Type:', contentType);
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: 'PUT',
+        headers: { Authorization: auth, 'Content-Type': contentType },
+        body,
+      });
+    } catch (fetchErr) {
+      console.error('[CNC] PUT fetch failed (network error):', url, fetchErr);
+      throw fetchErr;
+    }
+    console.debug('[CNC] PUT response', url, res.status, res.statusText);
     if (!res.ok) {
       throw new Error(`PUT ${url} → ${res.status} ${res.statusText}`);
     }
@@ -123,9 +139,15 @@
 
   // ── Manufacture (upload to Nextcloud) ───────────────────────────────────────────
   async function manufacture() {
+    console.debug('[CNC] manufacture() called');
+    console.debug('[CNC] nextcloudServer:', nextcloudServer || '(empty)');
+    console.debug('[CNC] cncUser:', cncUser || '(empty)');
+    console.debug('[CNC] cncPassword configured:', cncPassword ? 'yes' : 'no');
+
     if (!nextcloudServer || !cncUser || !cncPassword) {
       uploadStatus = 'error';
       uploadMessage = 'Nextcloud credentials are not configured (NEXTCLOUD_WEBDAV_SERVER, CNC_APP_USER, CNC_APP_PASSWORD).';
+      console.warn('[CNC] Aborting: missing credentials');
       return;
     }
 
@@ -144,6 +166,7 @@
 
       // Nextcloud WebDAV path: <server>/remote.php/dav/files/<user>
       const davBase = nextcloudServer.replace(/\/$/, '') + '/remote.php/dav/files/' + cncUser;
+      console.debug('[CNC] davBase:', davBase);
 
       const cncPath     = `${davBase}/CNC-Projects`;
       const userPath    = `${cncPath}/${userId}`;
@@ -188,6 +211,7 @@
       uploadStatus = 'success';
       uploadMessage = `Uploaded to /CNC-Projects/${userId}/${projectId}`;
     } catch (err) {
+      console.error('[CNC] manufacture() error:', err);
       uploadStatus = 'error';
       uploadMessage = err instanceof Error ? err.message : 'Upload failed';
     }
